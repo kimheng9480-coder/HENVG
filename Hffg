@@ -9,9 +9,9 @@ local LocalPlayer = Players.LocalPlayer
 local Holding = false
 local TouchPosition = Vector2.zero
 
-_G.TeamCheck = false
+_G.TeamCheck = true
 _G.AimPart = "Head"
-_G.Sensitivity = 0.05
+_G.Sensitivity = 0
 _G.AimbotEnabled = true
 
 -- Get closest player to touch position
