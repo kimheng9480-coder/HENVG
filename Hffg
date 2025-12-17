@@ -7,26 +7,30 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local aimbotEnabled = false
+local aimbotEnabled = true
 local aiming = false
-local keybind = Enum.UserInputType.Touch
+local activeTouchId = nil
 
 -- FIND CLOSEST PLAYER
 local function getClosestPlayer()
     local closest = nil
     local shortestDistance = math.huge
 
+    if not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+        return nil
+    end
+
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer
             and player.Character
             and player.Character:FindFirstChild("HumanoidRootPart")
             and player.Character:FindFirstChild("Humanoid")
-            and player.Character.Humanoid.Health > 0
-            and LocalPlayer.Character
-            and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            and player.Character.Humanoid.Health > 0 then
 
-            local distance = (player.Character.HumanoidRootPart.Position -
-                LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            local distance = (
+                player.Character.HumanoidRootPart.Position -
+                LocalPlayer.Character.HumanoidRootPart.Position
+            ).Magnitude
 
             if distance < shortestDistance then
                 shortestDistance = distance
@@ -38,17 +42,18 @@ local function getClosestPlayer()
     return closest
 end
 
--- INPUT
-UIS.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.UserInputType == keybind and aimbotEnabled then
-        aiming = true
-    end
+-- TOUCH INPUT
+UIS.TouchStarted:Connect(function(input, gpe)
+    if gpe or not aimbotEnabled then return end
+
+    aiming = true
+    activeTouchId = input.TouchId
 end)
 
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == keybind then
+UIS.TouchEnded:Connect(function(input)
+    if input.TouchId == activeTouchId then
         aiming = false
+        activeTouchId = nil
     end
 end)
 
@@ -64,6 +69,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
--- TOGGLE (example)
-aimbotEnabled = true
