@@ -58,26 +58,55 @@ local function GetClosestPlayer()
 	return Target
 end
 
+-- PC right-click
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
-	if input.UserInputType == Enum.UserInputType.MouseButton2
-	or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		Holding = true
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton2
-	or input.UserInputType == Enum.UserInputType.Touch then
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		Holding = false
 	end
 end)
 
+-- MOBILE pinch-to-zoom
+UserInputService.TouchPinch:Connect(function(touchPositions, scale, velocity, state)
+	if state == Enum.UserInputState.Begin then
+		Holding = true
+	elseif state == Enum.UserInputState.End then
+		Holding = false
+	end
+end)
 
 RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
-    end
+	if Holding and _G.AimbotEnabled then
+		local Target = GetClosestPlayer()
+
+		if Target
+		and Target.Character
+		and Target.Character:FindFirstChild(_G.AimPart) then
+
+			TweenService:Create(
+				Camera,
+				TweenInfo.new(
+					_G.Sensitivity,
+					Enum.EasingStyle.Sine,
+					Enum.EasingDirection.Out
+				),
+				{
+					CFrame = CFrame.new(
+						Camera.CFrame.Position,
+						Target.Character[_G.AimPart].Position
+					)
+				}
+			):Play()
+		end
+	end
 end)
+
+
 
