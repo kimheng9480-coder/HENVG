@@ -1,3 +1,31 @@
+local HENG = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local MainWindow = HENG:CreateWindow({
+	Name = "Combat Arena by.2BK2",
+	LoadingTitle = "welcome TO 2BK2",
+	LoadingSubtitle = "BK",
+	ConfigurationSaving = {
+	   Enabled = false,
+	   FolderName = nil, -- Create a custom folder for your hub/game
+	   FileName = "BK Hub"
+	},
+	Discord = {
+	   Enabled = false,
+	   Invite = "", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD.
+	   RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+	},
+	KeySystem = true, -- Set this to true to use our key system
+	KeySettings = {
+	   Title = "BK Hub",
+	   Subtitle = "Key System",
+	   Note = "Key = ២០០០៛ អាចប្រើនបានច្រើនអ្នក",
+	   FileName = "SiriusKey",
+	   SaveKey = true,
+	   GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+	   Key = "2BK_236432"
+	}
+ })
+ local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
+
 -- SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -7,7 +35,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local aimbotEnabled = true
+local aimbotEnabled = false
 local aiming = false
 local activeTouchId = nil
 
@@ -16,53 +44,18 @@ local function getClosestPlayer()
     local closest = nil
     local shortestDistance = math.huge
 
-    if not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-        return nil
-    end
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer
-            and player.Character
-            and player.Character:FindFirstChild("HumanoidRootPart")
-            and player.Character:FindFirstChild("Humanoid")
-            and player.Character.Humanoid.Health > 0 then
-
-            local distance = (
-                player.Character.HumanoidRootPart.Position -
-                LocalPlayer.Character.HumanoidRootPart.Position
-            ).Magnitude
-
-            if distance < shortestDistance then
-                shortestDistance = distance
-                closest = player
-            end
-        end
-    end
-
-    return closest
-end
-
-local function getClosestPlayer()
-    local closest = nil
-    local shortestDistance = math.huge
-
-    if not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-        return nil
-    end
-
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer
             and player.Character
             and player.Character:FindFirstChild("HumanoidRootPart")
             and player.Character:FindFirstChild("Humanoid")
             and player.Character.Humanoid.Health > 0
-            -- TEAM CHECK
+            and LocalPlayer.Character
+            and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             and (player.Team ~= LocalPlayer.Team or LocalPlayer.Team == nil) then
 
-            local distance = (
-                player.Character.HumanoidRootPart.Position -
-                LocalPlayer.Character.HumanoidRootPart.Position
-            ).Magnitude
+            local distance = (player.Character.HumanoidRootPart.Position -
+                LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 
             if distance < shortestDistance then
                 shortestDistance = distance
@@ -74,21 +67,31 @@ local function getClosestPlayer()
     return closest
 end
 
-
--- TOUCH INPUT
-UIS.TouchStarted:Connect(function(input, gpe)
+-- INPUT
+UIS.InputBegan:Connect(function(input, gpe)
     if gpe or not aimbotEnabled then return end
 
-    aiming = true
-    activeTouchId = input.TouchId
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aiming = true
+
+    elseif input.UserInputType == Enum.UserInputType.Touch then
+        aiming = true
+        activeTouchId = input.TouchId
+    end
 end)
 
-UIS.TouchEnded:Connect(function(input)
-    if input.TouchId == activeTouchId then
+-- INPUT END
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aiming = false
+
+    elseif input.UserInputType == Enum.UserInputType.Touch
+        and input.TouchId == activeTouchId then
         aiming = false
         activeTouchId = nil
     end
 end)
+
 
 -- CAMERA LOCK
 RunService.RenderStepped:Connect(function()
@@ -102,3 +105,12 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+ local Toggle = MainTab:CreateToggle({
+	Name = "Player AimBot / តម្រង់ទៅមនុស្សពិត",
+	CurrentValue = false,
+	Flag = "AIm_Toggle",
+	Callback = function(Value)
+		aimbotEnabled = Value
+	end,
+})
