@@ -86,6 +86,17 @@ FireButton.InputEnded:Connect(function(input)
 	end
 end)
 
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
+    end
+end)
 -- Safety (finger slides off)
 UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Touch then
@@ -97,22 +108,7 @@ end)
 -- AIMBOT LOOP (ONLY WHILE FIRE BUTTON HELD)
 ------------------------------------------------
 RunService.RenderStepped:Connect(function()
-	if not (Holding and _G.AimbotEnabled) then return end
-
-	local target = GetClosestPlayer()
-	if target
-	and target.Character
-	and target.Character:FindFirstChild(_G.AimPart) then
-
-		TweenService:Create(
-			Camera,
-			TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{
-				CFrame = CFrame.new(
-					Camera.CFrame.Position,
-					target.Character[_G.AimPart].Position
-				)
-			}
-		):Play()
-	end
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
+    end
 end)
