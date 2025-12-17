@@ -42,6 +42,39 @@ local function getClosestPlayer()
     return closest
 end
 
+local function getClosestPlayer()
+    local closest = nil
+    local shortestDistance = math.huge
+
+    if not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+        return nil
+    end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer
+            and player.Character
+            and player.Character:FindFirstChild("HumanoidRootPart")
+            and player.Character:FindFirstChild("Humanoid")
+            and player.Character.Humanoid.Health > 0
+            -- TEAM CHECK
+            and (player.Team ~= LocalPlayer.Team or LocalPlayer.Team == nil) then
+
+            local distance = (
+                player.Character.HumanoidRootPart.Position -
+                LocalPlayer.Character.HumanoidRootPart.Position
+            ).Magnitude
+
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closest = player
+            end
+        end
+    end
+
+    return closest
+end
+
+
 -- TOUCH INPUT
 UIS.TouchStarted:Connect(function(input, gpe)
     if gpe or not aimbotEnabled then return end
