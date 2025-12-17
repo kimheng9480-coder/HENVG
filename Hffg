@@ -1,114 +1,90 @@
--- SERVICES
+_G.TeamCheck = true -- true = enemies only
+
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
-local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- STATES
-local Holding = false
-
--- SETTINGS
-_G.AimbotEnabled = true
-_G.TeamCheck = true
-_G.AimPart = "Head"
-_G.Sensitivity = 0
+_G.aimbot = false
+local aiming = false
 
 ------------------------------------------------
--- GET CLOSEST PLAYER TO CROSSHAIR
+-- GET CLOSEST PLAYER (WITH TEAM CHECK)
 ------------------------------------------------
-local function GetClosestPlayer()
-	local closest, maxDist = nil, math.huge
-	local mousePos = UserInputService:GetMouseLocation()
+local function closestplayer()
+	local dist = math.huge
+	local target = nil
 
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer
-		and player.Character
-		and player.Character:FindFirstChild("Humanoid")
-		and player.Character:FindFirstChild("HumanoidRootPart")
-		and player.Character.Humanoid.Health > 0 then
+	for _, v in ipairs(Players:GetPlayers()) do
+		if v ~= LocalPlayer
+		and v.Character
+		and v.Character:FindFirstChild("Humanoid")
+		and v.Character:FindFirstChild("HumanoidRootPart")
+		and v.Character.Humanoid.Health > 0 then
 
-			if _G.TeamCheck and player.Team == LocalPlayer.Team then
+			-- TEAM CHECK
+			if _G.TeamCheck and v.Team == LocalPlayer.Team then
 				continue
 			end
 
-			local screenPos, onScreen =
-				Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+			local magnitude =
+				(v.Character.HumanoidRootPart.Position -
+				LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 
-			if onScreen then
-				local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-				if dist < maxDist then
-					maxDist = dist
-					closest = player
-				end
+			if magnitude < dist then
+				dist = magnitude
+				target = v
 			end
 		end
 	end
 
-	return closest
+	return target
 end
 
 ------------------------------------------------
--- MOBILE FIRE BUTTON (COMBAT ARENA STYLE)
+-- TOGGLE BUTTON
 ------------------------------------------------
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+Toggle.MouseButton1Click:Connect(function()
+	_G.aimbot = not _G.aimbot
 
-local FireGui = Instance.new("ScreenGui")
-FireGui.Name = "FireGui"
-FireGui.ResetOnSpawn = false
-FireGui.Parent = PlayerGui
-
-local FireButton = Instance.new("ImageButton")
-FireButton.Size = UDim2.fromScale(0.17, 0.17)
-FireButton.Position = UDim2.fromScale(0.78, 0.6)
-FireButton.BackgroundTransparency = 1
-FireButton.Image = "rbxassetid://7072718365" -- fire icon
-FireButton.Parent = FireGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(1, 0)
-corner.Parent = FireButton
-
--- HOLD TO AIM
-FireButton.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		Holding = true
-	end
-end)
-
-FireButton.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		Holding = false
-	end
-end)
-
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = false
-    end
-end)
--- Safety (finger slides off)
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch then
-		Holding = false
+	if _G.aimbot then
+		Toggle.Text = "បើក"
+		Toggle.TextColor3 = Color3.fromRGB(0,170,0)
+	else
+		Toggle.Text = "បិទ"
+		Toggle.TextColor3 = Color3.fromRGB(255,0,0)
 	end
 end)
 
 ------------------------------------------------
--- AIMBOT LOOP (ONLY WHILE FIRE BUTTON HELD)
+-- INPUT (RIGHT CLICK)
+------------------------------------------------
+UIS.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+		aiming = true
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+		aiming = false
+	end
+end)
+
+------------------------------------------------
+-- AIMBOT LOOP
 ------------------------------------------------
 RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
-    end
+	if not (_G.aimbot and aiming) then return end
+
+	local target = closestplayer()
+	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+		Camera.CFrame = CFrame.new(
+			Camera.CFrame.Position,
+			target.Character.HumanoidRootPart.Position
+		)
+	end
 end)
