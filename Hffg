@@ -54,8 +54,8 @@ local function getClosestPlayer()
             and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             and (player.Team ~= LocalPlayer.Team or LocalPlayer.Team == nil) then
 
-            local distance = (player.Character.HumanoidRootPart.Position -
-                LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            local distance = (player.Character.Head.Position -
+                LocalPlayer.Character.Head.Position).Magnitude
 
             if distance < shortestDistance then
                 shortestDistance = distance
@@ -100,7 +100,7 @@ RunService.RenderStepped:Connect(function()
         if target and target.Character then
             Camera.CFrame = CFrame.new(
                 Camera.CFrame.Position,
-                target.Character.HumanoidRootPart.Position
+                target.Character.Head.Position
             )
         end
     end
