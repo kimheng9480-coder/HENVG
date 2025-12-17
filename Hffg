@@ -1,90 +1,69 @@
-_G.TeamCheck = true -- true = enemies only
-
+-- SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
+-- VARIABLES
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-_G.aimbot = false
+local aimbotEnabled = false
 local aiming = false
+local keybind = Enum.UserInputType.Touch
 
-------------------------------------------------
--- GET CLOSEST PLAYER (WITH TEAM CHECK)
-------------------------------------------------
-local function closestplayer()
-	local dist = math.huge
-	local target = nil
+-- FIND CLOSEST PLAYER
+local function getClosestPlayer()
+    local closest = nil
+    local shortestDistance = math.huge
 
-	for _, v in ipairs(Players:GetPlayers()) do
-		if v ~= LocalPlayer
-		and v.Character
-		and v.Character:FindFirstChild("Humanoid")
-		and v.Character:FindFirstChild("HumanoidRootPart")
-		and v.Character.Humanoid.Health > 0 then
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer
+            and player.Character
+            and player.Character:FindFirstChild("HumanoidRootPart")
+            and player.Character:FindFirstChild("Humanoid")
+            and player.Character.Humanoid.Health > 0
+            and LocalPlayer.Character
+            and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 
-			-- TEAM CHECK
-			if _G.TeamCheck and v.Team == LocalPlayer.Team then
-				continue
-			end
+            local distance = (player.Character.HumanoidRootPart.Position -
+                LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 
-			local magnitude =
-				(v.Character.HumanoidRootPart.Position -
-				LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closest = player
+            end
+        end
+    end
 
-			if magnitude < dist then
-				dist = magnitude
-				target = v
-			end
-		end
-	end
-
-	return target
+    return closest
 end
 
-------------------------------------------------
--- TOGGLE BUTTON
-------------------------------------------------
-Toggle.MouseButton1Click:Connect(function()
-	_G.aimbot = not _G.aimbot
-
-	if _G.aimbot then
-		Toggle.Text = "បើក"
-		Toggle.TextColor3 = Color3.fromRGB(0,170,0)
-	else
-		Toggle.Text = "បិទ"
-		Toggle.TextColor3 = Color3.fromRGB(255,0,0)
-	end
-end)
-
-------------------------------------------------
--- INPUT (RIGHT CLICK)
-------------------------------------------------
+-- INPUT
 UIS.InputBegan:Connect(function(input, gpe)
-	if gpe then return end
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		aiming = true
-	end
+    if gpe then return end
+    if input.UserInputType == keybind and aimbotEnabled then
+        aiming = true
+    end
 end)
 
 UIS.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		aiming = false
-	end
+    if input.UserInputType == keybind then
+        aiming = false
+    end
 end)
 
-------------------------------------------------
--- AIMBOT LOOP
-------------------------------------------------
+-- CAMERA LOCK
 RunService.RenderStepped:Connect(function()
-	if not (_G.aimbot and aiming) then return end
-
-	local target = closestplayer()
-	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-		Camera.CFrame = CFrame.new(
-			Camera.CFrame.Position,
-			target.Character.HumanoidRootPart.Position
-		)
-	end
+    if aimbotEnabled and aiming then
+        local target = getClosestPlayer()
+        if target and target.Character then
+            Camera.CFrame = CFrame.new(
+                Camera.CFrame.Position,
+                target.Character.HumanoidRootPart.Position
+            )
+        end
+    end
 end)
+
+-- TOGGLE (example)
+aimbotEnabled = true
