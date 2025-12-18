@@ -1,116 +1,77 @@
-local HENG = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local MainWindow = HENG:CreateWindow({
-	Name = "Combat Arena by.2BK2",
-	LoadingTitle = "welcome TO 2BK2",
-	LoadingSubtitle = "BK",
-	ConfigurationSaving = {
-	   Enabled = false,
-	   FolderName = nil, -- Create a custom folder for your hub/game
-	   FileName = "BK Hub"
-	},
-	Discord = {
-	   Enabled = false,
-	   Invite = "", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD.
-	   RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-	},
-	KeySystem = true, -- Set this to true to use our key system
-	KeySettings = {
-	   Title = "BK Hub",
-	   Subtitle = "Key System",
-	   Note = "Key = ២០០០៛ អាចប្រើនបានច្រើនអ្នក",
-	   FileName = "SiriusKey",
-	   SaveKey = true,
-	   GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-	   Key = "2BK_236432"
-	}
- })
- local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
-
--- SERVICES
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- VARIABLES
-local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Holding = false
 
-local aimbotEnabled = false
-local aiming = false
-local activeTouchId = nil
+_G.AimbotEnabled = true
+_G.TeamCheck = true -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
--- FIND CLOSEST PLAYER
-local function getClosestPlayer()
-    local closest = nil
-    local shortestDistance = math.huge
+local function GetClosestPlayer()
+	local MaximumDistance = math.huge
+	local Target = nil
+  
+  	coroutine.wrap(function()
+    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
+  	end)()
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer
-            and player.Character
-            and player.Character:FindFirstChild("HumanoidRootPart")
-            and player.Character:FindFirstChild("Humanoid")
-            and player.Character.Humanoid.Health > 0
-            and LocalPlayer.Character
-            and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            and (player.Team ~= LocalPlayer.Team or LocalPlayer.Team == nil) then
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+                  							MaximumDistance = VectorDistance
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+               							MaximumDistance = VectorDistance
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 
-            local distance = (player.Character.Head.Position -
-                LocalPlayer.Character.Head.Position).Magnitude
-
-            if distance < shortestDistance then
-                shortestDistance = distance
-                closest = player
-            end
-        end
-    end
-
-    return closest
+	return Target
 end
 
--- INPUT
-UIS.InputBegan:Connect(function(input, gpe)
-    if gpe or not aimbotEnabled then return end
-
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        aiming = true
-
-    elseif input.UserInputType == Enum.UserInputType.Touch then
-        aiming = true
-        activeTouchId = input.TouchId
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch then
+        Holding = true
     end
 end)
 
--- INPUT END
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        aiming = false
-
-    elseif input.UserInputType == Enum.UserInputType.Touch
-        and input.TouchId == activeTouchId then
-        aiming = false
-        activeTouchId = nil
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch then
+        Holding = false
     end
 end)
 
-
--- CAMERA LOCK
 RunService.RenderStepped:Connect(function()
-    if aimbotEnabled and aiming then
-        local target = getClosestPlayer()
-        if target and target.Character then
-            Camera.CFrame = CFrame.new(
-                Camera.CFrame.Position,
-                target.Character.Head.Position
-            )
-        end
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
 end)
-
- local Toggle = MainTab:CreateToggle({
-	Name = "Player AimBot / តម្រង់ទៅមនុស្សពិត",
-	CurrentValue = false,
-	Flag = "AIm_Toggle",
-	Callback = function(Value)
-		aimbotEnabled = Value
-	end,
-})
