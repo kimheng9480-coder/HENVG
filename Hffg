@@ -50,26 +50,13 @@ velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 -- Fly toggle variable
 local fly = false
 
--- GUI Toggle
+-- GUI Toggle (example, adjust according to your GUI library)
 local Toggle = MainTab:CreateToggle({
 	Name = "Fly / មើលមនុស្សពិតទាំងអស់", 
 	CurrentValue = false,
 	Flag = "fly", 
 	Callback = function(Value)
 		fly = Value
-	end,
-})
-
--- GUI Slider for fly speed
-local Slider = MainTab:CreateSlider({
-	Name = "Fly Speed", 
-	Range = {1, 350},
-	Increment = 1,
-	Suffix = "Speed",
-	CurrentValue = FLY_SPEED, 
-	Flag = "Slider9", 
-	Callback = function(Value)
-		FLY_SPEED = Value -- update fly speed dynamically
 	end,
 })
 
@@ -107,3 +94,4 @@ RunService.RenderStepped:Connect(function()
 		gyro.CFrame = CFrame.new(root.Position, root.Position + moveDir)
 	end
 end)
+
