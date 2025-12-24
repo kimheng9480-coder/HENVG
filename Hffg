@@ -1,95 +1,12 @@
-local HENG = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local MainWindow = HENG:CreateWindow({
-	Name = "Border[WAR] បាញ់ឆ្កែសៀម by.2BK2",
-	LoadingTitle = "welcome TO 2BK2",
-	LoadingSubtitle = "BK",
-	ConfigurationSaving = {
-	   Enabled = false,
-	   FolderName = nil, -- Create a custom folder for your hub/game
-	   FileName = "BK Hub"
-	},
-	Discord = {
-	   Enabled = false,
-	   Invite = "", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD.
-	   RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-	},
-	KeySystem = true, -- Set this to true to use our key system
-	KeySettings = {
-	   Title = "BK Hub",
-	   Subtitle = "Key System",
-	   Note = "Key = ២០០០៛ អាចប្រើនបានច្រើនអ្នក",
-	   FileName = "SiriusKey",
-	   SaveKey = true,
-	   GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-	   Key = "2BK_236432"
-	}
- })
- local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
+if game.PlaceId == 15694891095 then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
 
-local Camera = workspace.CurrentCamera
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
+elseif game.PlaceId == 15841412989 then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
 
--- GLOBAL SETTINGS
-_G.AimbotEnabled = false
-_G.TeamCheck = true
-_G.AimPart = "Head"
-_G.Sensitivity = 0
+elseif game.PlaceId == 17604093381 then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
 
--- GUI Toggle
-local Toggle = MainTab:CreateToggle({
-	Name = "Aimbot / មើលមនុស្សពិតទាំងអស់",
-	CurrentValue = false,
-	Flag = "aimbot",
-	Callback = function(Value)
-		_G.AimbotEnabled = Value
-	end,
-})
-
--- Get closest player to screen center
-local function GetClosestPlayer()
-	local MaxDistance = math.huge
-	local Target = nil
-	local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-	for _, v in ipairs(Players:GetPlayers()) do
-		if v ~= LocalPlayer
-			and v.Character
-			and v.Character:FindFirstChild(_G.AimPart)
-			and v.Character:FindFirstChild("Humanoid")
-			and v.Character.Humanoid.Health > 0 then
-
-			if _G.TeamCheck and v.Team == LocalPlayer.Team then
-				continue
-			end
-
-			local pos, onScreen = Camera:WorldToViewportPoint(v.Character[_G.AimPart].Position)
-			if onScreen then
-				local distance = (Vector2.new(pos.X, pos.Y) - ScreenCenter).Magnitude
-				if distance < MaxDistance then
-					MaxDistance = distance
-					Target = v
-				end
-			end
-		end
-	end
-
-	return Target
+elseif game.PlaceId == 15942857315 then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
 end
-
--- Aimbot loop (toggle only)
-RunService.RenderStepped:Connect(function()
-	if not _G.AimbotEnabled then return end
-
-	local Target = GetClosestPlayer()
-	if Target and Target.Character and Target.Character:FindFirstChild(_G.AimPart) then
-		TweenService:Create(
-			Camera,
-			TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{CFrame = CFrame.new(Camera.CFrame.Position, Target.Character[_G.AimPart].Position)}
-		):Play()
-	end
-end)
-
