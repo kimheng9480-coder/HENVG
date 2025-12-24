@@ -41,7 +41,7 @@ RunService.RenderStepped:Connect(function()
 	if humanoid.Jump then
 		velocity = Vector3.new(velocity.X, UP_SPEED, velocity.Z)
 	else
-		velocity = Vector3.new(velocity.X, -10, velocity.Z)
+		velocity = Vector3.new(velocity.X, 0, velocity.Z)
 	end
 
 	bodyVelocity.Velocity = velocity
