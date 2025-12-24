@@ -7,9 +7,9 @@ local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
 
 -- SETTINGS
-local FLY_SPEED = 50
-local UP_SPEED = 45
-local DOWN_SPEED = 0
+local FLY_SPEED = 100
+local UP_SPEED = 60
+local DOWN_SPEED = -1
 
 -- Body movers
 local gyro = Instance.new("BodyGyro")
