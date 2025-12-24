@@ -29,15 +29,20 @@ local MainWindow = HENG:CreateWindow({
 -- FLY SCRIPT CONTROLLED BY TOGGLE
 -- EDUCATIONAL / OWN GAME ONLY
 
+-- SERVICES
 local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 
+-- FORCE CLASSIC THUMBSTICK (MOBILE)
+UIS.TouchMovementMode = Enum.TouchMovementMode.Thumbstick
+
+-- FLY SETTINGS
 local flying = false
 local speed = 50
-
 local bodyGyro, bodyVelocity
 
+-- START FLY
 local function startFly()
 	local char = player.Character
 	if not char then return end
@@ -45,7 +50,7 @@ local function startFly()
 	local hrp = char:WaitForChild("HumanoidRootPart")
 
 	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.P = 9e4
+	bodyGyro.P = 90000
 	bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
 	bodyGyro.CFrame = hrp.CFrame
 	bodyGyro.Parent = hrp
@@ -56,17 +61,13 @@ local function startFly()
 	bodyVelocity.Parent = hrp
 end
 
+-- STOP FLY
 local function stopFly()
-	if bodyGyro then
-		bodyGyro:Destroy()
-		bodyGyro = nil
-	end
-	if bodyVelocity then
-		bodyVelocity:Destroy()
-		bodyVelocity = nil
-	end
+	if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+	if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
 end
 
+-- 🔘 RAYFIELD TOGGLE
 -- 🔘 TOGGLE (REPLACES F KEY)
 local Toggle = MainTab:CreateToggle({
 	Name = "fly / មើលមនុស្សពិតទាំងអស់",
@@ -82,29 +83,25 @@ local Toggle = MainTab:CreateToggle({
 	end,
 })
 
+-- ✈️ FLY MOVEMENT (CLASSIC JOYSTICK)
 RunService.RenderStepped:Connect(function()
+	if not flying or not bodyVelocity then return end
+
 	local char = player.Character
 	if not char then return end
 
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	if not humanoid then return end
 
-	local moveDir = humanoid.MoveDirection
-	-- moveDir is controlled by classic thumbstick
-end)
--- ✈️ FLY MOVEMENT
-RunService.RenderStepped:Connect(function()
-	if not flying or not bodyVelocity then return end
-
 	local cam = workspace.CurrentCamera
-	local moveDir = Vector3.zero
 
-	if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
-	if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
-	if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
-	if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
-	if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
-	if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir -= Vector3.new(0,1,0) end
+	-- Thumbstick / WASD movement
+	local moveDir = cam.CFrame:VectorToWorldSpace(humanoid.MoveDirection)
+
+	-- Jump = Up
+	if humanoid.Jump then
+		moveDir += Vector3.new(0, 1, 0)
+	end
 
 	if moveDir.Magnitude > 0 then
 		bodyVelocity.Velocity = moveDir.Unit * speed
@@ -114,4 +111,3 @@ RunService.RenderStepped:Connect(function()
 
 	bodyGyro.CFrame = cam.CFrame
 end)
-
