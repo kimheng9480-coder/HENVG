@@ -30,92 +30,98 @@ local MainWindow = HENG:CreateWindow({
  })
  local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character, humanoid, hrp
 
 local flying = false
-local speed = 50
+local flySpeed = 50
+local vertical = 0
 
-local bodyVelocity
-local bodyGyro
+local bv, bg
 
-local function startFly()
+-- Setup character (handles respawn)
+local function setupCharacter(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+
+	bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+
+	bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+	bg.P = 1e4
+end
+
+setupCharacter(player.Character or player.CharacterAdded:Wait())
+player.CharacterAdded:Connect(setupCharacter)
+
+-- START FLY
+function startFly()
+	if flying or not hrp then return end
 	flying = true
 
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-	bodyVelocity.Velocity = Vector3.zero
-	bodyVelocity.Parent = humanoidRootPart
-
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-	bodyGyro.CFrame = humanoidRootPart.CFrame
-	bodyGyro.Parent = humanoidRootPart
+	humanoid.PlatformStand = true
+	bv.Parent = hrp
+	bg.Parent = hrp
 end
 
-local function stopFly()
+-- STOP FLY
+function stopFly()
+	if not flying then return end
 	flying = false
-	if bodyVelocity then bodyVelocity:Destroy() end
-	if bodyGyro then bodyGyro:Destroy() end
+
+	humanoid.PlatformStand = false
+	if bv then bv.Parent = nil end
+	if bg then bg.Parent = nil end
+	vertical = 0
 end
+
+-- PC UP / DOWN CONTROLS
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.KeyCode == Enum.KeyCode.E then
+		vertical = 1
+	elseif input.KeyCode == Enum.KeyCode.Q then
+		vertical = -1
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.Q then
+		vertical = 0
+	end
+end)
+
+-- Fly movement (PC + Mobile)
+RunService.RenderStepped:Connect(function()
+	if flying and hrp then
+		local cam = workspace.CurrentCamera
+		bg.CFrame = cam.CFrame
+
+		local moveDir = humanoid.MoveDirection
+		bv.Velocity =
+			(cam.CFrame.RightVector * moveDir.X +
+			cam.CFrame.LookVector * -moveDir.Z +
+			Vector3.new(0, vertical, 0)) * flySpeed
+	end
+end)
 
 local Toggle = MainTab:CreateToggle({
 	Name = "Fly",
 	CurrentValue = false,
 	Flag = "fly",
 	Callback = function(Value)
-		flyToggle = Value
-
-		if flyToggle then
-			if not flying then
-				startFly()
-			end
+		if Value then
+			startFly()
 		else
-			if flying then
-				stopFly()
-			end
+			stopFly()
 		end
 	end,
 })
 
 
-player.CharacterAdded:Connect(function(char)
-	character = char
-	humanoidRootPart = char:WaitForChild("HumanoidRootPart")
-
-	if flying then
-		stopFly()
-	end
-end)
-
-
-RunService.RenderStepped:Connect(function()
-	if flying then
-		local moveDir = Vector3.zero
-
-		if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-			moveDir += workspace.CurrentCamera.CFrame.LookVector
-		end
-		if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-			moveDir -= workspace.CurrentCamera.CFrame.LookVector
-		end
-		if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-			moveDir -= workspace.CurrentCamera.CFrame.RightVector
-		end
-		if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-			moveDir += workspace.CurrentCamera.CFrame.RightVector
-		end
-		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-			moveDir += Vector3.new(0,1,0)
-		end
-		if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-			moveDir -= Vector3.new(0,1,0)
-		end
-
-		bodyVelocity.Velocity = moveDir * speed
-		bodyGyro.CFrame = workspace.CurrentCamera.CFrame
-	end
-end)
