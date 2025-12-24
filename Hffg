@@ -30,10 +30,11 @@ local MainWindow = HENG:CreateWindow({
 -- EDUCATIONAL / OWN GAME ONLY
 
 local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local flying = false
-local speed = 45
+local speed = 50
 
 local bodyGyro, bodyVelocity
 
@@ -66,7 +67,7 @@ local function stopFly()
 	end
 end
 
--- 🔘 TOGGLE CONNECTION
+-- 🔘 TOGGLE (REPLACES F KEY)
 local Toggle = MainTab:CreateToggle({
 	Name = "fly / មើលមនុស្សពិតទាំងអស់",
 	CurrentValue = false,
@@ -81,21 +82,19 @@ local Toggle = MainTab:CreateToggle({
 	end,
 })
 
--- ✈️ Fly Movement
+-- ✈️ FLY MOVEMENT
 RunService.RenderStepped:Connect(function()
 	if not flying or not bodyVelocity then return end
 
-	local char = player.Character
-	if not char then return end
-
-	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	local cam = workspace.CurrentCamera
+	local moveDir = Vector3.zero
 
-	local moveDir = cam.CFrame:VectorToWorldSpace(humanoid.MoveDirection)
-
-	if humanoid.Jump then
-		moveDir += Vector3.new(0, 1, 0)
-	end
+	if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
+	if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
+	if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
+	if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
+	if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
+	if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir -= Vector3.new(0,1,0) end
 
 	if moveDir.Magnitude > 0 then
 		bodyVelocity.Velocity = moveDir.Unit * speed
@@ -105,3 +104,4 @@ RunService.RenderStepped:Connect(function()
 
 	bodyGyro.CFrame = cam.CFrame
 end)
+
