@@ -70,7 +70,7 @@ local function stopFly()
 end
 
 -- 🔘 RAYFIELD TOGGLE
-MainTab:CreateToggle({
+Local Toggle = MainTab:CreateToggle({
 	Name = "Fly / មើលមនុស្សពិតទាំងអស់",
 	CurrentValue = false,
 	Flag = "FlyToggle",
