@@ -7,9 +7,8 @@ local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
 
 -- SETTINGS
-local FLY_SPEED = 100
-local UP_SPEED = 60
-local DOWN_SPEED = -1
+local FLY_SPEED = 50
+local UP_SPEED = 45
 
 -- Body movers
 local gyro = Instance.new("BodyGyro")
@@ -31,11 +30,11 @@ RunService.RenderStepped:Connect(function()
 	-- Horizontal movement
 	local move = moveDir * FLY_SPEED
 
-	-- Vertical movement
+	-- Vertical movement (UP only)
 	if humanoid.Jump then
 		move = Vector3.new(move.X, UP_SPEED, move.Z)
 	else
-		move = Vector3.new(move.X, DOWN_SPEED, move.Z)
+		move = Vector3.new(move.X, 0, move.Z) -- no downward movement
 	end
 
 	velocity.Velocity = move
