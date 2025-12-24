@@ -26,7 +26,7 @@ local MainWindow = HENG:CreateWindow({
  })
  local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
 
-local Players = game:GetService("Players")
+ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
@@ -94,4 +94,3 @@ RunService.RenderStepped:Connect(function()
 		gyro.CFrame = CFrame.new(root.Position, root.Position + moveDir)
 	end
 end)
-
