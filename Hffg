@@ -105,3 +105,26 @@ RunService.RenderStepped:Connect(function()
 	bodyGyro.CFrame = cam.CFrame
 end)
 
+RunService.RenderStepped:Connect(function()
+	if not flying or not bodyVelocity then return end
+
+	local char = player.Character
+	if not char then return end
+
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local cam = workspace.CurrentCamera
+
+	local moveDir = cam.CFrame:VectorToWorldSpace(humanoid.MoveDirection)
+
+	if humanoid.Jump then
+		moveDir += Vector3.new(0, 1, 0)
+	end
+
+	if moveDir.Magnitude > 0 then
+		bodyVelocity.Velocity = moveDir.Unit * speed
+	else
+		bodyVelocity.Velocity = Vector3.zero
+	end
+
+	bodyGyro.CFrame = cam.CFrame
+end)
