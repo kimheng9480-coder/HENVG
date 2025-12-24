@@ -26,71 +26,70 @@ local MainWindow = HENG:CreateWindow({
  })
  local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
 
- local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local root = character:WaitForChild("HumanoidRootPart")
+-- GLOBAL SETTINGS
+_G.AimbotEnabled = false
+_G.TeamCheck = false
+_G.AimPart = "Head"
+_G.Sensitivity = 0
 
--- SETTINGS
-local FLY_SPEED = 50
-local UP_SPEED = 45
-
--- Body movers
-local gyro = Instance.new("BodyGyro")
-gyro.P = 9000
-gyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-gyro.CFrame = root.CFrame
-
-local velocity = Instance.new("BodyVelocity")
-velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-
--- Fly toggle variable
-local fly = false
-
--- GUI Toggle (example, adjust according to your GUI library)
+-- GUI Toggle
 local Toggle = MainTab:CreateToggle({
-	Name = "Fly / មើលមនុស្សពិតទាំងអស់", 
+	Name = "Aimbot / មើលមនុស្សពិតទាំងអស់",
 	CurrentValue = false,
-	Flag = "fly", 
+	Flag = "aimbot",
 	Callback = function(Value)
-		fly = Value
+		_G.AimbotEnabled = Value
 	end,
 })
 
--- Render loop
+-- Get closest player to screen center
+local function GetClosestPlayer()
+	local MaxDistance = math.huge
+	local Target = nil
+	local ScreenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+	for _, v in ipairs(Players:GetPlayers()) do
+		if v ~= LocalPlayer
+			and v.Character
+			and v.Character:FindFirstChild(_G.AimPart)
+			and v.Character:FindFirstChild("Humanoid")
+			and v.Character.Humanoid.Health > 0 then
+
+			if _G.TeamCheck and v.Team == LocalPlayer.Team then
+				continue
+			end
+
+			local pos, onScreen = Camera:WorldToViewportPoint(v.Character[_G.AimPart].Position)
+			if onScreen then
+				local distance = (Vector2.new(pos.X, pos.Y) - ScreenCenter).Magnitude
+				if distance < MaxDistance then
+					MaxDistance = distance
+					Target = v
+				end
+			end
+		end
+	end
+
+	return Target
+end
+
+-- Aimbot loop (toggle only)
 RunService.RenderStepped:Connect(function()
-	if not fly then
-		-- Disable fly
-		if gyro.Parent then gyro.Parent = nil end
-		if velocity.Parent then velocity.Parent = nil end
-		humanoid.PlatformStand = false
-		return
-	end
+	if not _G.AimbotEnabled then return end
 
-	-- Enable fly
-	if not gyro.Parent then gyro.Parent = root end
-	if not velocity.Parent then velocity.Parent = root end
-	humanoid.PlatformStand = true
-
-	local moveDir = humanoid.MoveDirection
-
-	-- Horizontal movement
-	local move = moveDir * FLY_SPEED
-
-	-- Vertical movement (UP only)
-	if humanoid.Jump then
-		move = Vector3.new(move.X, UP_SPEED, move.Z)
-	else
-		move = Vector3.new(move.X, 0, move.Z) -- hover
-	end
-
-	velocity.Velocity = move
-
-	-- Face movement direction
-	if moveDir.Magnitude > 0 then
-		gyro.CFrame = CFrame.new(root.Position, root.Position + moveDir)
+	local Target = GetClosestPlayer()
+	if Target and Target.Character and Target.Character:FindFirstChild(_G.AimPart) then
+		TweenService:Create(
+			Camera,
+			TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+			{CFrame = CFrame.new(Camera.CFrame.Position, Target.Character[_G.AimPart].Position)}
+		):Play()
 	end
 end)
+
