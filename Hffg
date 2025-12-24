@@ -1,6 +1,3 @@
--- Simple Mobile Fly Script
--- Put as a LocalScript in StarterPlayerScripts
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -11,43 +8,40 @@ local root = character:WaitForChild("HumanoidRootPart")
 
 -- SETTINGS
 local FLY_SPEED = 50
-local UP_SPEED = 40
+local UP_SPEED = 45
+local DOWN_SPEED = -25
 
 -- Body movers
-local bodyGyro = Instance.new("BodyGyro")
-bodyGyro.P = 9000
-bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-bodyGyro.CFrame = root.CFrame
+local gyro = Instance.new("BodyGyro")
+gyro.P = 9000
+gyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+gyro.CFrame = root.CFrame
+gyro.Parent = root
 
-local bodyVelocity = Instance.new("BodyVelocity")
-bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-bodyVelocity.Velocity = Vector3.zero
+local velocity = Instance.new("BodyVelocity")
+velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+velocity.Parent = root
 
--- Enable flying
+-- Enable fly
 humanoid.PlatformStand = true
-bodyGyro.Parent = root
-bodyVelocity.Parent = root
 
 RunService.RenderStepped:Connect(function()
-	if not character or not root then return end
-
-	-- Direction from mobile joystick
 	local moveDir = humanoid.MoveDirection
 
 	-- Horizontal movement
-	local velocity = moveDir * FLY_SPEED
+	local move = moveDir * FLY_SPEED
 
-	-- Vertical movement (Jump button)
+	-- Vertical movement
 	if humanoid.Jump then
-		velocity = Vector3.new(velocity.X, UP_SPEED, velocity.Z)
+		move = Vector3.new(move.X, UP_SPEED, move.Z)
 	else
-		velocity = Vector3.new(velocity.X, 0, velocity.Z)
+		move = Vector3.new(move.X, DOWN_SPEED, move.Z)
 	end
 
-	bodyVelocity.Velocity = velocity
+	velocity.Velocity = move
 
 	-- Face movement direction
 	if moveDir.Magnitude > 0 then
-		bodyGyro.CFrame = CFrame.new(root.Position, root.Position + moveDir)
+		gyro.CFrame = CFrame.new(root.Position, root.Position + moveDir)
 	end
 end)
