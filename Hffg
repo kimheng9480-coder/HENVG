@@ -34,7 +34,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- GLOBAL SETTINGS
 _G.AimbotEnabled = false
-_G.TeamCheck = false
+_G.TeamCheck = true
 _G.AimPart = "Head"
 _G.Sensitivity = 0
 
