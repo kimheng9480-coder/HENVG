@@ -1,6 +1,3 @@
--- Fly Script (LocalScript)
-
-
 
 local HENG = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local MainWindow = HENG:CreateWindow({
@@ -29,94 +26,54 @@ local MainWindow = HENG:CreateWindow({
 	}
  })
  local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
+-- FLY SCRIPT CONTROLLED BY TOGGLE
+-- EDUCATIONAL / OWN GAME ONLY
 
-local Players = game:GetService("Players")
+local player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-
-local player = Players.LocalPlayer
-local character, humanoid, hrp
 
 local flying = false
-local flySpeed = 50
-local vertical = 0
+local speed = 45
 
-local bv, bg
+local bodyGyro, bodyVelocity
 
--- Setup character (handles respawn)
-local function setupCharacter(char)
-	character = char
-	humanoid = char:WaitForChild("Humanoid")
-	hrp = char:WaitForChild("HumanoidRootPart")
+local function startFly()
+	local char = player.Character
+	if not char then return end
 
-	bv = Instance.new("BodyVelocity")
-	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	local hrp = char:WaitForChild("HumanoidRootPart")
 
-	bg = Instance.new("BodyGyro")
-	bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-	bg.P = 1e4
+	bodyGyro = Instance.new("BodyGyro")
+	bodyGyro.P = 9e4
+	bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+	bodyGyro.CFrame = hrp.CFrame
+	bodyGyro.Parent = hrp
+
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = hrp
 end
 
-setupCharacter(player.Character or player.CharacterAdded:Wait())
-player.CharacterAdded:Connect(setupCharacter)
-
--- START FLY
-function startFly()
-	if flying or not hrp then return end
-	flying = true
-
-	humanoid.PlatformStand = true
-	bv.Parent = hrp
-	bg.Parent = hrp
+local function stopFly()
+	if bodyGyro then
+		bodyGyro:Destroy()
+		bodyGyro = nil
+	end
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+	end
 end
 
--- STOP FLY
-function stopFly()
-	if not flying then return end
-	flying = false
-
-	humanoid.PlatformStand = false
-	if bv then bv.Parent = nil end
-	if bg then bg.Parent = nil end
-	vertical = 0
-end
-
--- PC UP / DOWN CONTROLS
-UserInputService.InputBegan:Connect(function(input, gpe)
-	if gpe then return end
-	if input.KeyCode == Enum.KeyCode.E then
-		vertical = 1
-	elseif input.KeyCode == Enum.KeyCode.Q then
-		vertical = -1
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.Q then
-		vertical = 0
-	end
-end)
-
--- Fly movement (PC + Mobile)
-RunService.RenderStepped:Connect(function()
-	if flying and hrp then
-		local cam = workspace.CurrentCamera
-		bg.CFrame = cam.CFrame
-
-		local moveDir = humanoid.MoveDirection
-		bv.Velocity =
-			(cam.CFrame.RightVector * moveDir.X +
-			cam.CFrame.LookVector * -moveDir.Z +
-			Vector3.new(0, vertical, 0)) * flySpeed
-	end
-end)
-
+-- 🔘 TOGGLE CONNECTION
 local Toggle = MainTab:CreateToggle({
-	Name = "Fly",
+	Name = "fly / មើលមនុស្សពិតទាំងអស់",
 	CurrentValue = false,
 	Flag = "fly",
 	Callback = function(Value)
-		if Value then
+		flying = Value
+		if flying then
 			startFly()
 		else
 			stopFly()
@@ -124,4 +81,27 @@ local Toggle = MainTab:CreateToggle({
 	end,
 })
 
+-- ✈️ Fly Movement
+RunService.RenderStepped:Connect(function()
+	if not flying or not bodyVelocity then return end
 
+	local char = player.Character
+	if not char then return end
+
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local cam = workspace.CurrentCamera
+
+	local moveDir = cam.CFrame:VectorToWorldSpace(humanoid.MoveDirection)
+
+	if humanoid.Jump then
+		moveDir += Vector3.new(0, 1, 0)
+	end
+
+	if moveDir.Magnitude > 0 then
+		bodyVelocity.Velocity = moveDir.Unit * speed
+	else
+		bodyVelocity.Velocity = Vector3.zero
+	end
+
+	bodyGyro.CFrame = cam.CFrame
+end)
