@@ -1,32 +1,4 @@
-local HENG = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local MainWindow = HENG:CreateWindow({
-	Name = "Border[WAR] បាញ់ឆ្កែសៀម by.2BK2",
-	LoadingTitle = "welcome TO 2BK2",
-	LoadingSubtitle = "BK",
-	ConfigurationSaving = {
-	   Enabled = false,
-	   FolderName = nil, -- Create a custom folder for your hub/game
-	   FileName = "BK Hub"
-	},
-	Discord = {
-	   Enabled = false,
-	   Invite = "", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD.
-	   RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-	},
-	KeySystem = true, -- Set this to true to use our key system
-	KeySettings = {
-	   Title = "BK Hub",
-	   Subtitle = "Key System",
-	   Note = "Key = ២០០០៛ អាចប្រើនបានច្រើនអ្នក",
-	   FileName = "SiriusKey",
-	   SaveKey = true,
-	   GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-	   Key = "2BK_236432"
-	}
- })
- local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
-
- local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
@@ -50,13 +22,26 @@ velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 -- Fly toggle variable
 local fly = false
 
--- GUI Toggle (example, adjust according to your GUI library)
+-- GUI Toggle
 local Toggle = MainTab:CreateToggle({
 	Name = "Fly / មើលមនុស្សពិតទាំងអស់", 
 	CurrentValue = false,
 	Flag = "fly", 
 	Callback = function(Value)
 		fly = Value
+	end,
+})
+
+-- GUI Slider for fly speed
+local Slider = MainTab:CreateSlider({
+	Name = "Fly Speed", 
+	Range = {1, 350},
+	Increment = 1,
+	Suffix = "Speed",
+	CurrentValue = FLY_SPEED, 
+	Flag = "Slider9", 
+	Callback = function(Value)
+		FLY_SPEED = Value -- update fly speed dynamically
 	end,
 })
 
