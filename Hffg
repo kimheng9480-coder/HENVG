@@ -1,12 +1,10 @@
-if game.PlaceId == 15694891095 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
+local validPlaceIds = {
+    15694891095,
+    15841412989,
+    17604093381,
+    15942857315
+}
 
-elseif game.PlaceId == 15841412989 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
-
-elseif game.PlaceId == 17604093381 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
-
-elseif game.PlaceId == 15942857315 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena",true))()
+if table.find(validPlaceIds, game.PlaceId) then
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kimheng9480-coder/2BK2/refs/heads/main/combat%20arena", true))()
 end
