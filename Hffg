@@ -26,53 +26,54 @@ local MainWindow = HENG:CreateWindow({
 	}
  })
  local MainTab = MainWindow:CreateTab("បាញ់គ្នារ") -- Title, Image
--- FLY SCRIPT CONTROLLED BY TOGGLE
--- EDUCATIONAL / OWN GAME ONLY
 
 -- SERVICES
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 
--- FORCE CLASSIC THUMBSTICK (MOBILE)
+local player = Players.LocalPlayer
 UIS.TouchMovementMode = Enum.TouchMovementMode.Thumbstick
 
--- FLY SETTINGS
+-- SETTINGS
 local flying = false
-local speed = 50
-local bodyGyro, bodyVelocity
+local speed = 60
+
+local alignOri, linearVel, attachment
 
 -- START FLY
 local function startFly()
-	local char = player.Character
-	if not char then return end
-
+	local char = player.Character or player.CharacterAdded:Wait()
 	local hrp = char:WaitForChild("HumanoidRootPart")
 
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.P = 90000
-	bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-	bodyGyro.CFrame = hrp.CFrame
-	bodyGyro.Parent = hrp
+	attachment = Instance.new("Attachment")
+	attachment.Parent = hrp
 
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-	bodyVelocity.Velocity = Vector3.zero
-	bodyVelocity.Parent = hrp
+	alignOri = Instance.new("AlignOrientation")
+	alignOri.Attachment0 = attachment
+	alignOri.MaxTorque = math.huge
+	alignOri.Responsiveness = 200
+	alignOri.Parent = hrp
+
+	linearVel = Instance.new("LinearVelocity")
+	linearVel.Attachment0 = attachment
+	linearVel.MaxForce = math.huge
+	linearVel.RelativeTo = Enum.ActuatorRelativeTo.World
+	linearVel.Parent = hrp
 end
 
 -- STOP FLY
 local function stopFly()
-	if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
-	if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
+	if alignOri then alignOri:Destroy() alignOri = nil end
+	if linearVel then linearVel:Destroy() linearVel = nil end
+	if attachment then attachment:Destroy() attachment = nil end
 end
 
 -- 🔘 RAYFIELD TOGGLE
--- 🔘 TOGGLE (REPLACES F KEY)
-local Toggle = MainTab:CreateToggle({
-	Name = "fly / មើលមនុស្សពិតទាំងអស់",
+MainTab:CreateToggle({
+	Name = "Fly / មើលមនុស្សពិតទាំងអស់",
 	CurrentValue = false,
-	Flag = "fly",
+	Flag = "FlyToggle",
 	Callback = function(Value)
 		flying = Value
 		if flying then
@@ -85,29 +86,26 @@ local Toggle = MainTab:CreateToggle({
 
 -- ✈️ FLY MOVEMENT (CLASSIC JOYSTICK)
 RunService.RenderStepped:Connect(function()
-	if not flying or not bodyVelocity then return end
+	if not flying or not linearVel then return end
 
 	local char = player.Character
 	if not char then return end
 
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
-	if not humanoid then return end
-
 	local cam = workspace.CurrentCamera
+	if not humanoid or not cam then return end
 
-	-- Thumbstick / WASD movement
+	-- Thumbstick / WASD
 	local moveDir = cam.CFrame:VectorToWorldSpace(humanoid.MoveDirection)
 
-	-- Jump = Up
-	if humanoid.Jump then
-		moveDir += Vector3.new(0, 1, 0)
-	end
-
+	-- Smooth upward control (mobile-safe)
 	if moveDir.Magnitude > 0 then
-		bodyVelocity.Velocity = moveDir.Unit * speed
+		linearVel.VectorVelocity = moveDir.Unit * speed
 	else
-		bodyVelocity.Velocity = Vector3.zero
+		linearVel.VectorVelocity = Vector3.zero
 	end
 
-	bodyGyro.CFrame = cam.CFrame
+	alignOri.CFrame = cam.CFrame
 end)
+
+
